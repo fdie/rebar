@@ -35,7 +35,7 @@
 -export([info/2]).
 
 -define(APPUPFILEFORMAT, "%% appup generated for ~p by rebar (~p)~n"
-        "{~p, [{~p, ~p}], [{~p, []}]}.~n").
+        "{~p, [~n  {~p,~n    ~p~n  }~n], [~n  {~p,~n    ~p~n  }~n]}.~n").
 
 %% ====================================================================
 %% Public API
@@ -156,24 +156,30 @@ generate_appup_files(NewVerPath, OldVerPath, ModDeps, [{App, {OldVer, NewVer}}|R
     ModDeps1 = [{N, [M1 || M1 <- M, lists:member(M1, ChangedNames)]}
                 || {N, M} <- ModDeps],
 
-    Added = [generate_instruction(added, File) || File <- AddedFiles],
-    Deleted = [generate_instruction(deleted, File) || File <- DeletedFiles],
-    Changed = [generate_instruction(changed, ModDeps1, File)
-               || File <- ChangedFiles],
-
-    Inst = lists:append([Added, Deleted, Changed]),
+    UpgradeInstructions = generate_instructions(
+        {added, AddedFiles}, ChangedFiles, {deleted, DeletedFiles}, ModDeps1),
+    DowngradeInstructions = generate_instructions(
+        {deleted, AddedFiles}, ChangedFiles, {added, DeletedFiles}, ModDeps1),
 
     AppUpFile = filename:join([NewEbinDir, atom_to_list(App) ++ ".appup"]),
 
     ok = file:write_file(AppUpFile,
                          io_lib:fwrite(?APPUPFILEFORMAT,
                                        [App, rebar_utils:now_str(), NewVer,
-                                        OldVer, Inst, OldVer])),
+                                           OldVer, UpgradeInstructions,
+                                           OldVer, DowngradeInstructions])),
 
     ?CONSOLE("Generated appup for ~p~n", [App]),
     generate_appup_files(NewVerPath, OldVerPath, ModDeps, Rest);
 generate_appup_files(_, _, _, []) ->
     ?CONSOLE("Appup generation complete~n", []).
+
+generate_instructions({BeforeCommand, BeforeFiles}, ChangedFiles, {AfterCommand, AfterFiles}, ModDeps) ->
+    Before = [generate_instruction(BeforeCommand, File) || File <- BeforeFiles],
+    Changed = [generate_instruction(changed, ModDeps, File)
+               || File <- ChangedFiles],
+    After = [generate_instruction(AfterCommand, File) || File <- AfterFiles],
+    lists:append([Before, Changed, After]).
 
 generate_instruction(added, File) ->
     Name = list_to_atom(file_to_name(File)),
