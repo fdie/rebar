@@ -149,7 +149,7 @@ generate_appup_files(NewVerPath, OldVerPath, ModDeps, [{App, {OldVer, NewVer}}|R
     NewEbinDir = filename:join([NewVerPath, "lib",
                                 atom_to_list(App) ++ "-" ++ NewVer, "ebin"]),
 
-    {AddedFiles, DeletedFiles, ChangedFiles} = beam_lib:cmp_dirs(NewEbinDir,
+    {AddedFiles, DeletedFiles, ChangedFiles} = rebar_beam_lib:cmp_dirs(NewEbinDir,
                                                                  OldEbinDir),
 
     ChangedNames = [list_to_atom(file_to_name(F)) || {F, _} <- ChangedFiles],
