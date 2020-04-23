@@ -56,7 +56,10 @@ shell(_Config, _AppFile) ->
     %% new user process
     _ = [erlang:group_leader(whereis(user), Pid) || Pid <- NeedsUpdate],
     %% enable error_logger's tty output
-    ok = error_logger:swap_handler(tty),
+    ok = case erlang:function_exported(error_logger, swap_handler, 1) of
+             true -> error_logger:swap_handler(tty);
+             _ -> ok
+         end,
     %% disable the simple error_logger (which may have been added multiple
     %% times). removes at most the error_logger added by init and the
     %% error_logger added by the tty handler
