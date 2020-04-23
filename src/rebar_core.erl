@@ -569,7 +569,8 @@ ulist([H | T], Acc) ->
 
 plugin_modules(_Config, _PredirsAssoc, []) ->
     {ok, []};
-plugin_modules(Config, PredirsAssoc, Modules) ->
+plugin_modules(Config, PredirsAssoc, Modules0) ->
+    Modules = lists:map(fun({Mod,_}) -> Mod; (Mod) -> Mod end, Modules0),
     FoundModules = [M || M <- Modules, code:which(M) =/= non_existing],
     plugin_modules(Config, PredirsAssoc, FoundModules, Modules -- FoundModules).
 
