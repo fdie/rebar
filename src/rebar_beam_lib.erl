@@ -494,6 +494,7 @@ read_all_but_useless_chunks(File0) when is_atom(File0);
 is_useless_chunk("CInf") -> true;
 is_useless_chunk("Attr") -> true;
 is_useless_chunk("Abst") -> true;
+is_useless_chunk("Dbgi") -> true;
 is_useless_chunk(_Chunk) -> false.
 
 %% -> {ok, {Module, Chunks}} | throw(Error)

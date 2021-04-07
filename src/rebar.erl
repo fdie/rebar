@@ -148,7 +148,12 @@ init_config({Options, _NonOptArgs}) ->
 init_config1(BaseConfig) ->
     %% Determine the location of the rebar executable; important for pulling
     %% resources out of the escript
-    ScriptName = filename:absname(escript:script_name()),
+    ScriptName = case catch escript:script_name() of
+                     {'EXIT', _} ->
+                         Loc = code:where_is_file("rebar.beam"),
+                         string:left(Loc, length(Loc) - length("/ebin/rebar.beam"));
+                     Path -> filename:absname(Path)
+                 end,
     BaseConfig1 = rebar_config:set_xconf(BaseConfig, escript, ScriptName),
     ?DEBUG("Rebar location: ~p\n", [ScriptName]),
     %% Note the top-level directory for reference
